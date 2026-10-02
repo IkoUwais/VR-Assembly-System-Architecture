@@ -1,6 +1,7 @@
 # VR-Assembly-System-Architecture
 VR Assembly Training System - Data-Driven | Multiplayer | DLC | XR
 
+
 # Technologies Used
 Unreal Engine 5 (C++ & Blueprints)
 Gameplay Tags & Primary Data Assets
@@ -10,17 +11,50 @@ Async Asset Loading (Streamable Manager)
 |Build-Link| -> https://drive.google.com/file/d/1o7ktLmsBT23WI0cvKCI88fqZe1JYhXEN/view?usp=sharing
 
 
+
+# VR Assembly System - Architectural Map
+
+This is a high-level overview of the system architecture for the VR Assembly Training Simulation. It is designed to showcase the separation of concerns, data flow, and design patterns used to create a scalable, data-driven Unreal Engine 5 C++ framework.
+The full C++ implementation is provided to ensure that this is not just a proof of concept. This map serves as a technical portfolio piece demonstrating the architectural decisions and engineering mindset applied to the project.
+
+## High-Level System Flow
+
+The system is built on a strict "Separations of Concerns" principle. The game logic (Assembly Manager) knows nothing about spawning (Spawner) or UI/State (GameState). They communicate via events (Observer Pattern) and data payloads (DTOs).
+
+[ User Input / VR Controller ]
+              |
+              v
+      [ APart_Base ] <------- [ UGrabComponent ]
+      (Actor)                 (Handles physics, attachment)
+              |
+              | Broadcasts Events (Grabbed, Released)
+              v
+      [ AAssemblyManager ] <------- [ ASilhouette_Base ]
+      (Mediator / Facade)           (Visual Guide)
+              |
+              | Broadcasts Events (StepStarted, StepValidated, StepFailed)
+              v
+      [ AAssemblyGameState_Base ] <------- [ UAssemblyDataSubsystem ]
+      (Session Tracker / State)             (Data Registry / Async Loader)
+              ^
+              |
+      [ AAssemblyGameMode_Base ]
+      (Orchestrator / Bootstrap)
+
+
+
+
 # VR Assembly Training System - Architectural Showcase
 
 **Author:** Aaves Shaikh (Senior Unreal Engine C++ Programmer)
 **Status:** Core logic is private (IP Protection). This repository serves as a technical breakdown of the architecture, patterns, and C++ implementation strategies used in the project.
 
-## 📖 Overview
+## Overview
 This project is a highly modular, data-driven VR assembly simulation built in Unreal Engine 5 using C++. The goal was to create a robust framework where designers can add new assemblies, parts, and step-by-step sequences without writing any new code. 
 
 It features a strict separation of concerns, asynchronous asset loading, and a custom VR grab/interaction system.
 
-## 🏗️ Architecture & Design Patterns
+## Architecture & Design Patterns
 The system was architected to avoid the common "Spaghetti Blueprint" trap. It relies heavily on C++ interfaces, data assets, and the Observer/Mediator patterns.
 
 *   **Data-Driven Design:** Uses `UPrimaryDataAsset` (e.g., `UPartDefinition`, `UAssemblySequenceDefinition`) and Data Tables to define parts, meshes, and assembly steps. The game logic knows nothing about specific parts; it only reads data.
@@ -29,7 +63,7 @@ The system was architected to avoid the common "Spaghetti Blueprint" trap. It re
 *   **State Machine:** A custom `UStateComponent` handles the lifecycle of a part (Initial -> Grabbed -> Dropped -> Applied), broadcasting events to update physics, collision, and visuals.
 *   **Async Asset Management:** A `UAssemblyDataSubsystem` handles the async loading of all required assets (meshes, materials) for a specific assembly sequence, ensuring no frame-rate hitches during gameplay.
 
-## 🔍 Key Subsystems Breakdown
+## Key Subsystems Breakdown
 
 ### 1. Assembly Manager (Mediator / Facade)
 *   **Responsibility:** Drives the step-by-step assembly sequence. Hides the silhouette, validates if the correct part is placed in the correct position (with position/rotation tolerance), and advances the sequence.
@@ -47,7 +81,7 @@ The system was architected to avoid the common "Spaghetti Blueprint" trap. It re
 *   **Responsibility:** The single source of truth for all data. It reads from Data Tables, resolves `FGameplayTags` to `FPrimaryAssetIds`, and async-loads the required assets.
 *   **Implementation:** Strictly validates data before committing it to the cache, ensuring the game never starts with missing assets.
 
-## 💻 Code Snippet Example (Validation Logic)
+## Code Snippet Example (Validation Logic)
 *This snippet from `AAssemblyManager::IsPlacementValid` demonstrates the defensive programming and per-step tolerance checking used to validate a player's placement.*
 
 ```cpp
